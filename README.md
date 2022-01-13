@@ -3,12 +3,16 @@ Clang based generator for [MetaStuff](https://github.com/eliasdaler/MetaStuff)
 
 # Prerequisites
 [clang](https://clang.llvm.org/) & [llvm](https://llvm.org/) is required to be installed as generating is based on [libTooling](https://clang.llvm.org/docs/LibTooling.html) from LLVM/Clang
-
+e.g. on linux
+```
+$ sudo apt install libclang-9-dev
+```
 # Building
-For building you need to have llvm & clang installed then standard cmake stuff: 
+For building you need to have llvm & clang installed then standard cmake stuff:
 ```
 $ git clone https://github.com/w0land/metastuff-clang-generator.git
 $ cd metastuff-clang-generator
+$ git submodule update --init --recursive
 $ mkdir build && cd build
 $ cmake ..
 $ cmake --build . --config Release
@@ -16,14 +20,14 @@ $ cmake --build . --config Release
 
 # Usage
 To properly use this on actual headers you need a bit of fine tunning: you need to figure out where default includes are for clang and pass them to metastuff-clang-generator
- command line. See example: 
- 
+ command line. See example:
+
  ```
  $ cd build/
  $ ./src/metastuff-generator ~/main.cpp -- -I/usr/lib/clang/5.0.1/include -std=c++14
  ```
- 
- where main.cpp: 
+
+ where main.cpp:
  ```cpp
  #include <string>
 
@@ -44,8 +48,8 @@ int main(int argc, char *argv[])
 }
 ```
 
-The generated code will be printed to stdout. 
-For given example the generated code is: 
+The generated code will be printed to stdout.
+For given example the generated code is:
 ```cpp
 
 #ifndef TEST
@@ -71,7 +75,7 @@ inline auto registerMembers<asd::SimpleType2>() {
 
 ```
 
-# Detailed usage 
+# Detailed usage
 ```
 $ metastuff-clang-generator --help
 
