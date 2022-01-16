@@ -1,0 +1,10 @@
+#ifndef {INCLUDE_GUARD_NAME}
+#define {INCLUDE_GUARD_NAME}
+
+#include <Meta.h>
+{INCLUDES}
+
+namespace meta {{
+{SPECIALIZATIONS}
+}}
+#endif {INCLUDE_GUARD_NAME}
