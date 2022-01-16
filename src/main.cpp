@@ -85,18 +85,18 @@ public:
       if (rc) {
         // Found comment!
         std::string raw = rc->getRawText(sm);
-        std::cout << "raw:\n" << raw << std::endl;
+        // std::cout << "raw:\n" << raw << std::endl;
 
         if (raw.find("@meta-ignore-struct") != std::string::npos ||
             raw.find("@meta-ignore-class") != std::string::npos) {
           ignoreStruct = true;
-          std::cout << "ignoreStruct: " << ignoreStruct << std::endl;
+          // std::cout << "ignoreStruct: " << ignoreStruct << std::endl;
         }
         auto ignoreMPos = raw.find("@meta-ignore-members");
         if (ignoreMPos != std::string::npos) {
           std::string delim = ",";
 
-          auto start = raw.find(":", ignoreMPos);
+          auto start = raw.find(":", ignoreMPos) + 1;
           std::string s;
           auto end = raw.find(delim, start);
 
@@ -104,7 +104,7 @@ public:
             s = raw.substr(start, end - start);
             s.erase(std::remove_if(s.begin(), s.end(), ::isspace), s.end());
             ignoreMembers.push_back(s);
-            std::cout << "ignore: \"" << s << "\"" << std::endl;
+            // std::cout << "ignore: \"" << s << "\"" << std::endl;
 
             start = end + delim.length();
             end = raw.find(delim, start);
@@ -114,7 +114,7 @@ public:
           s = raw.substr(start, end - start);
           s.erase(std::remove_if(s.begin(), s.end(), ::isspace), s.end());
           ignoreMembers.push_back(s);
-          std::cout << "ignore: \"" << s << "\"" << std::endl;
+          // std::cout << "ignore: \"" << s << "\"" << std::endl;
         }
       }
 
@@ -193,7 +193,6 @@ std::string readFile(fs::path fn) {
 int main(int argc, const char *argv[]) {
 
   clang::tooling::CommonOptionsParser opts{argc, argv, ms_generator};
-  std::cout << OutputFilename << TemplateOption << std::endl;
 
   std::string SpecializationTemplate;
   std::string FileTemplate;

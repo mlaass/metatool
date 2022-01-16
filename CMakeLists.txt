@@ -39,5 +39,11 @@ PUBLIC fmt)
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
-add_subdirectory(3rdParty/argparse)
 add_subdirectory(3rdParty/fmt)
+
+add_executable(testapp
+ test/test.cpp)
+
+target_include_directories(testapp
+PUBLIC test
+)
