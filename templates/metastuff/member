@@ -1,1 +1,1 @@
-member("{SHORT_MEMBER_NAME}", &{MEMBER_NAME})
+        member("{SHORT_MEMBER_NAME}", &{MEMBER_NAME})

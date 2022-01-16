@@ -12,44 +12,44 @@
 #include <llvm/Support/CommandLine.h>
 
 namespace fs = std::filesystem;
-namespace {
+namespace metastuff {
 struct Struct {
   std::string name;
   std::string memberTemplatesFilled;
 };
 
 std::string randomHeaderName() {
-  std::vector<std::string> const silables = {"QU",
-                                             "OK"
-                                             "AE",
-                                             "IE",
-                                             "KH",
-                                             "PO",
-                                             "FL",
-                                             "OO"
-                                             "DA",
-                                             "IZ",
-                                             "NI",
-                                             "UH",
-                                             "OU",
-                                             "FF",
-                                             "SR"
-                                             "TI",
-                                             "KA",
-                                             "KI",
-                                             "LL",
-                                             "DA",
-                                             "SZ",
-                                             "AA"
-                                             "MA",
-                                             "MO"};
+  std::vector<std::string> const syllables = {"QU",
+                                              "OK"
+                                              "AE",
+                                              "IE",
+                                              "KH",
+                                              "PO",
+                                              "FL",
+                                              "OO"
+                                              "DA",
+                                              "IZ",
+                                              "NI",
+                                              "UH",
+                                              "OU",
+                                              "FF",
+                                              "SR"
+                                              "TI",
+                                              "KA",
+                                              "KI",
+                                              "LL",
+                                              "DA",
+                                              "SZ",
+                                              "AA"
+                                              "MA",
+                                              "MO"};
 
   const auto len = 5;
   std::mt19937_64 gen{std::random_device()()};
-  std::uniform_int_distribution<size_t> dist{0, silables.size() - 1};
+  std::uniform_int_distribution<size_t> dist{0, syllables.size() - 1};
   std::vector<std::string> v;
   std::generate_n(std::back_inserter(v), len,
-                  [&] { return silables[dist(gen)]; });
+                  [&] { return syllables[dist(gen)]; });
   std::string ret;
   ret = std::accumulate(v.begin(), v.end(), ret);
   ;
@@ -57,8 +57,7 @@ std::string randomHeaderName() {
   return ret;
 }
 
-std::vector<Struct> data;
-} // namespace
+} // namespace metastuff
 
 class StructDeclASTVisitor
     : public clang::RecursiveASTVisitor<StructDeclASTVisitor> {
@@ -66,38 +65,86 @@ class StructDeclASTVisitor
 
 public:
   static std::string MemberTemplate;
+  static std::vector<metastuff::Struct> Data;
 
   explicit StructDeclASTVisitor(clang::SourceManager &sm)
       : sourceManager_(sm) {}
 
   bool VisitCXXRecordDecl(clang::CXXRecordDecl *decl) {
     if (sourceManager_.isWrittenInMainFile(decl->getSourceRange().getBegin())) {
+      using namespace metastuff;
       Struct s;
       s.name = decl->getQualifiedNameAsString();
-
+      clang::ASTContext &ctx = decl->getASTContext();
+      clang::SourceManager &sm = ctx.getSourceManager();
       const auto fields = decl->fields();
-      std::string memberBuff;
 
-      std::for_each(
-          std::begin(fields), std::end(fields), [&memberBuff](const auto &f) {
-            using namespace fmt::literals;
-            const auto shortMemberName = f->getNameAsString();
-            const auto memberName = f->getQualifiedNameAsString();
-            memberBuff += "        ";
-            memberBuff += fmt::format(MemberTemplate,
-                                      "SHORT_MEMBER_NAME"_a = shortMemberName,
-                                      "MEMBER_NAME"_a = memberName);
-            memberBuff += ",\n";
-          });
+      bool ignoreStruct = false;
+      auto *rc = decl->getASTContext().getRawCommentForDeclNoCache(decl);
+      std::vector<std::string> ignoreMembers = {};
+      if (rc) {
+        // Found comment!
+        std::string raw = rc->getRawText(sm);
+        std::cout << "raw:\n" << raw << std::endl;
 
-      memberBuff = memberBuff.substr(0, memberBuff.size() - 2);
-      s.memberTemplatesFilled = memberBuff;
-      data.push_back(s);
+        if (raw.find("@meta-ignore-struct") != std::string::npos ||
+            raw.find("@meta-ignore-class") != std::string::npos) {
+          ignoreStruct = true;
+          std::cout << "ignoreStruct: " << ignoreStruct << std::endl;
+        }
+        auto ignoreMPos = raw.find("@meta-ignore-members");
+        if (ignoreMPos != std::string::npos) {
+          std::string delim = ",";
+
+          auto start = raw.find(":", ignoreMPos);
+          std::string s;
+          auto end = raw.find(delim, start);
+
+          while (end != std::string::npos) {
+            s = raw.substr(start, end - start);
+            s.erase(std::remove_if(s.begin(), s.end(), ::isspace), s.end());
+            ignoreMembers.push_back(s);
+            std::cout << "ignore: \"" << s << "\"" << std::endl;
+
+            start = end + delim.length();
+            end = raw.find(delim, start);
+          }
+          end = raw.find(";", start);
+
+          s = raw.substr(start, end - start);
+          s.erase(std::remove_if(s.begin(), s.end(), ::isspace), s.end());
+          ignoreMembers.push_back(s);
+          std::cout << "ignore: \"" << s << "\"" << std::endl;
+        }
+      }
+
+      if (!ignoreStruct) {
+        std::string memberBuff;
+        std::for_each(
+            std::begin(fields), std::end(fields),
+            [&memberBuff, &ignoreMembers](const auto &f) {
+              using namespace fmt::literals;
+              const std::string shortMemberName = f->getNameAsString();
+              const std::string memberName = f->getQualifiedNameAsString();
+              if (std::find(ignoreMembers.begin(), ignoreMembers.end(),
+                            shortMemberName) == ignoreMembers.end()) {
+
+                memberBuff += fmt::format(
+                    MemberTemplate, "SHORT_MEMBER_NAME"_a = shortMemberName,
+                    "MEMBER_NAME"_a = memberName);
+                memberBuff += ",\n";
+              }
+            });
+        memberBuff = memberBuff.substr(0, memberBuff.size() - 2);
+        s.memberTemplatesFilled = memberBuff;
+        Data.push_back(s);
+      }
     }
     return true;
   }
 };
 std::string StructDeclASTVisitor::MemberTemplate = "";
+std::vector<metastuff::Struct> StructDeclASTVisitor::Data = {};
 
 class StructDeclASTConsumer : public clang::ASTConsumer {
   StructDeclASTVisitor visitor_; // doesn't have to be private
@@ -158,18 +205,23 @@ int main(int argc, const char *argv[]) {
   }
 
   const auto files = opts.getSourcePathList();
-
   clang::tooling::ClangTool tool{opts.getCompilations(), files};
+
+  // FIXME could not get his to work
+  // tool.appendArgumentsAdjuster(clang::tooling::getInsertArgumentAdjuster(
+  //     {"-fparse-all-comments"},
+  //     clang::tooling::ArgumentInsertPosition::BEGIN));
 
   auto ec = tool.run(
       clang::tooling::newFrontendActionFactory<StructDeclFrontendAction>()
           .get());
   std::string specializationBuff, includeBuff;
-  for (const auto &oneEntry : data) {
+
+  for (const auto &structEntry : StructDeclASTVisitor::Data) {
     using namespace fmt;
     specializationBuff +=
-        fmt::format(SpecializationTemplate, "TYPE"_a = oneEntry.name,
-                    "MEMBERS"_a = oneEntry.memberTemplatesFilled);
+        fmt::format(SpecializationTemplate, "TYPE"_a = structEntry.name,
+                    "MEMBERS"_a = structEntry.memberTemplatesFilled);
     specializationBuff += "\n";
   }
 
@@ -181,7 +233,7 @@ int main(int argc, const char *argv[]) {
     }
   }
   auto output = fmt::format(
-      FileTemplate, "INCLUDE_GUARD_NAME"_a = randomHeaderName(),
+      FileTemplate, "INCLUDE_GUARD_NAME"_a = metastuff::randomHeaderName(),
       "SPECIALIZATIONS"_a = specializationBuff, "INCLUDES"_a = includeBuff);
   std::ofstream outfile(OutputFilename.c_str());
   if (outfile.good()) {
