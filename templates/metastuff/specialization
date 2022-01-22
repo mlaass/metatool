@@ -1,4 +1,0 @@
-inline auto registerMembers<{TYPE}>() {{
-    return members(
-{MEMBERS}
-    )}};

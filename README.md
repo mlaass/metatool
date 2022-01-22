@@ -5,12 +5,12 @@ Clang based generator for [MetaStuff](https://github.com/eliasdaler/MetaStuff)
 [clang](https://clang.llvm.org/) & [llvm](https://llvm.org/) is required to be installed as generating is based on [libTooling](https://clang.llvm.org/docs/LibTooling.html) from LLVM/Clang
 e.g. on linux
 ```
-$ sudo apt install libclang-9-dev
+$ sudo apt install llvm-11-dev libclang-9-dev
 ```
 # Building
 For building you need to have llvm & clang installed then standard cmake stuff:
 ```
-$ git clone https://github.com/w0land/metastuff-clang-generator.git
+$ git clone
 $ cd metastuff-clang-generator
 $ git submodule update --init --recursive
 $ mkdir build && cd build

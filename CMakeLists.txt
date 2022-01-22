@@ -3,14 +3,15 @@ project(metastuff-generator)
 
 set(CMAKE_CXX_STANDARD 17)
 
+# set(CMAKE_FIND_PACKAGE_SORT_ORDER NATURAL)
+# set(CMAKE_FIND_PACKAGE_SORT_DIRECTION DEC)
 # Find CMake file for Clang
+find_package(LLVM 9 REQUIRED)
+set(Clang_DIR  /usr/lib/llvm-9/lib/)
 find_package(Clang REQUIRED)
 
 # Add path to LLVM modules
-set(CMAKE_MODULE_PATH
-${CMAKE_MODULE_PATH}
-"${LLVM_CMAKE_DIR}"
-)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${LLVM_CMAKE_DIR}")
 
 # import LLVM CMake functions
 include(AddLLVM)
@@ -28,18 +29,23 @@ add_llvm_executable(metastuff-gen src/main.cpp)
 
 target_include_directories(metastuff-gen
 PUBLIC 3rdParty/argparse/include
+PUBLIC 3rdParty/tinyxml2
 )
+
 target_compile_options(metastuff-gen PRIVATE -fexceptions)
 
 target_link_libraries(metastuff-gen
 PRIVATE clangTooling
-PUBLIC fmt)
+PUBLIC fmt
+PUBLIC tinyxml2)
 
 
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
+message(STATUS "Using ClangConfig.cmake in: ${CLANG_DIR}")
 
 add_subdirectory(3rdParty/fmt)
+add_subdirectory(3rdParty/tinyxml2)
 
 add_executable(testapp
  test/test.cpp)
