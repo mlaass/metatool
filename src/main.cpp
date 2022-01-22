@@ -345,6 +345,7 @@ int main(int argc, const char *argv[]) {
   args.push_back({"INCLUDES", includeBuff});
   for (const auto &[filetname, filet] : fileTemplates) {
     auto output = fill_template(filet.templ8, args);
+    //output = fill_template(output, {{"&quot;", "\""}, {"&amp;", "&"}, {"&lt;", "<"},{"&gt;", ">"}, {"&apos", "'"}});
     if (OutputFilename != "") {
       std::ofstream outfile((filet.filename).c_str());
       if (outfile.good()) {
