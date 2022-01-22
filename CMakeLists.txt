@@ -44,7 +44,6 @@ message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 message(STATUS "Using ClangConfig.cmake in: ${CLANG_DIR}")
 
-add_subdirectory(3rdParty/fmt)
 add_subdirectory(3rdParty/tinyxml2)
 
 add_executable(testapp
