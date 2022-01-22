@@ -1,6 +1,6 @@
 <template name="metastuff">
 	<member name="serialize" delim=", " remove_last_delim="True">
-		{MEMBER_TYPE} member(&quot;{SHORT_MEMBER_NAME}&quot;, &amp;{MEMBER_NAME})
+		 member(&quot;{SHORT_MEMBER_NAME}&quot;, &amp;{MEMBER_NAME})
 	</member>
 	<struct name="meta">
 		inline auto registerMembers&lt;{TYPE}&gt;() {{

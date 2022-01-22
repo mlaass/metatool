@@ -225,13 +225,8 @@ static llvm::cl::extrahelp
 static llvm::cl::extrahelp
     CommonHelp(clang::tooling::CommonOptionsParser::HelpMessage);
 
-static llvm::cl::opt<std::string> TemplateOption{
-    "t", llvm::cl::desc("Name or path of template"),
-    llvm::cl::value_desc("path"), llvm::cl::cat(ms_generator),
-    llvm::cl::init("../templates/metastuff")};
-
 static llvm::cl::opt<std::string> TemplateXMLOption{
-    "xt", llvm::cl::desc("Name or path of XML template"),
+    "t", llvm::cl::desc("Name or path of XML template"),
     llvm::cl::value_desc("path"), llvm::cl::cat(ms_generator)};
 
 static llvm::cl::opt<std::string> OutputFilename{
@@ -261,7 +256,10 @@ int main(int argc, const char *argv[]) {
           &   &amp;
      *
      */
-     std::cout << "loadFile:" << doc.LoadFile(templ.c_str()) << std::endl;
+    int err =  doc.LoadFile(templ.c_str());
+    if(err)
+      std::cerr << "Error loading File "<<templ <<": "<<err << std::endl;
+
     auto root = doc.FirstChildElement();
     // std::cout << "xml: " << root->Attribute("name") << std::endl;
 
@@ -310,9 +308,8 @@ int main(int argc, const char *argv[]) {
   std::map<std::string, std::string> structBuf;
   for (const auto &[structtname, structt] : structTemplates) {
     structBuf[structtname] = "";
-    using namespace fmt;
-    std::vector<std::pair<std::string, std::string>> args;
     for (auto &structEntry : StructDeclASTVisitor::structData) {
+    std::vector<std::pair<std::string, std::string>> args;
       for (auto &[memtname, memt] : StructDeclASTVisitor::memberTemplates) {
         auto members = structEntry.memberTemplatesFilled[memtname];
         args.push_back({(std::string("members.") + memtname), members});
@@ -323,7 +320,6 @@ int main(int argc, const char *argv[]) {
     }
   }
 
-  using namespace fmt;
   // includes
   {
     for (const auto &f : files) {

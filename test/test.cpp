@@ -3,6 +3,8 @@
 struct A {
   int a;
   float b;
+  std::string s;
+  void fun(int x){;}
 };
 
 /**
@@ -16,7 +18,7 @@ struct B {
 
 /**
  * @meta-ignore-members: b,c;
- * aonly specified members get ignored
+ * only specified members get ignored
  */
 struct C {
   int a;
@@ -26,6 +28,9 @@ struct C {
   float c;
   // not ignored
   float d;
+
+  B bB;
+  A* pA;
 };
 
 int main() { std::cout << "hello" << std::endl; }

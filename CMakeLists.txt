@@ -36,7 +36,6 @@ target_compile_options(metastuff-gen PRIVATE -fexceptions)
 
 target_link_libraries(metastuff-gen
 PRIVATE clangTooling
-PUBLIC fmt
 PUBLIC tinyxml2)
 
 
@@ -46,9 +45,9 @@ message(STATUS "Using ClangConfig.cmake in: ${CLANG_DIR}")
 
 add_subdirectory(3rdParty/tinyxml2)
 
-add_executable(testapp
- test/test.cpp)
+# add_executable(testapp
+#  test/test.cpp)
 
-target_include_directories(testapp
-PUBLIC test
-)
+# target_include_directories(testapp
+# PUBLIC test
+# )
