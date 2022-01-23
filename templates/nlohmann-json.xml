@@ -3,13 +3,13 @@
 		j[&quot;{SHORT_MEMBER_NAME}&quot;] = input.{SHORT_MEMBER_NAME};</member>
 <member name="deserialize" delim="">
 		output.{SHORT_MEMBER_NAME} = j[&quot;{SHORT_MEMBER_NAME}&quot;].get&lt;{MEMBER_TYPE}&gt;();</member>
-<struct name="header">
+<struct name="header" delim="">
 template &lt;&gt;  struct adl_serializer&lt;{TYPE}&gt;  {
 	static void to_json(json &amp;j, const struct {TYPE} &amp;input);
 	static void from_json(const json &amp;j, {TYPE} &amp;output);
 };
 </struct>
-<struct name="impl">
+<struct name="impl" delim="">
 template &lt;&gt; struct adl_serializer&lt;{TYPE}&gt; {
 	static void to_json(json &amp;j, const struct {TYPE} &amp;input) {
 		{members.serialize}

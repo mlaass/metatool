@@ -2,7 +2,7 @@
 	<member name="serialize" delim=", " remove_last_delim="True">
 		 member(&quot;{SHORT_MEMBER_NAME}&quot;, &amp;{MEMBER_NAME})
 	</member>
-	<struct name="meta">
+	<struct name="meta" delim="">
 		inline auto registerMembers&lt;{TYPE}&gt;() {{
 		return members(
 		{members.serialize}

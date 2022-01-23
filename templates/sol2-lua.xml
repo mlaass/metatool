@@ -1,7 +1,7 @@
 <template name="sol2-lua">
 	<member name="serialize" delim=", " remove_last_delim="True">
 		  &quot;{SHORT_MEMBER_NAME}&quot;, &amp;{MEMBER_NAME})</member>
-	<struct name="meta">
+	<struct name="meta" delim="">
 		lua.new_usertype&lt;{TYPE}&gt;(&quot;{TYPE}&quot;,{members.serialize}
 		);
 	</struct>
