@@ -155,13 +155,15 @@ public:
 
           std::string memberBuff;
           std::for_each(
-              std::begin(fields), std::end(fields),
-              [&](const auto &f) {
+              std::begin(fields), std::end(fields), [&](const auto &f) {
                 const std::string shortMemberName = f->getNameAsString();
                 const std::string memberName = f->getQualifiedNameAsString();
 
                 const clang::QualType qt = f->getType();
-                const std::string memberType = qt.getAsString();
+                std::string memberType = qt.getAsString();
+                // some cleanup seems to be needed here!
+                if (memberType == "_Bool")
+                  memberType = "bool";
 
                 if (std::find(ignoreMembers.begin(), ignoreMembers.end(),
                               shortMemberName) == ignoreMembers.end()) {
@@ -251,9 +253,9 @@ int main(int argc, const char *argv[]) {
       std::string delim = e->Attribute("delim");
       bool removeLast = e->BoolAttribute("remove_last_delim");
       std::string txt = "";
-      if(e->GetText())
+      if (e->GetText())
         txt = e->GetText();
-      structTemplates[name] = {delim, removeLast,txt};
+      structTemplates[name] = {delim, removeLast, txt};
     }
     for (auto *e = root->FirstChildElement("file"); e != NULL;
          e = e->NextSiblingElement("file")) {
@@ -263,10 +265,9 @@ int main(int argc, const char *argv[]) {
       std::string fn = ((OutputFilename == "") ? name : OutputFilename);
       fn += (std::string(".") + ext);
       std::string txt = "";
-      if(e->GetText())
+      if (e->GetText())
         txt = e->GetText();
       fileTemplates[name] = {ext, fn, txt};
-
     }
     for (auto *e = root->FirstChildElement("member"); e != NULL;
          e = e->NextSiblingElement("member")) {
@@ -274,10 +275,9 @@ int main(int argc, const char *argv[]) {
       std::string delim = e->Attribute("delim");
       bool removeLast = e->BoolAttribute("remove_last_delim");
       std::string txt = "";
-      if(e->GetText())
+      if (e->GetText())
         txt = e->GetText();
-      StructDeclASTVisitor::memberTemplates[name] = {delim, removeLast,txt};
-
+      StructDeclASTVisitor::memberTemplates[name] = {delim, removeLast, txt};
     }
   }
 

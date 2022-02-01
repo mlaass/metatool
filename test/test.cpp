@@ -2,7 +2,11 @@
 
 struct A {
   int a;
+  uint ua;
   float b;
+  double db;
+  char cc;
+  bool isBool;
   std::string s;
   void fun(int x){;}
 };

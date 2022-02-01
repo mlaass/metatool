@@ -30,7 +30,13 @@ $ cmake --build . --config Release
 ```
 
 # Usage
-To properly use this on actual headers you need a bit of fine tuning: you need to figure out where default includes are for clang and pass them to metastuff-gen command line. See example:
+
+
+To properly use this on actual headers you need a bit of fine tuning:
+As clang needs a compilation database to work with you can either create a json file `compile_commands.json' with cmake if you are using cmake in your project:
+ `cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON`
+
+Or you need to figure out where default includes are for clang and pass them to metastuff-gen command line. See example:
 
  ```
  $ cd build/
