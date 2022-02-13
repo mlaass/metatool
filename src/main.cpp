@@ -189,6 +189,7 @@ public:
           std::string methodBuf;
           std::for_each(
               std::begin(methods), std::end(methods), [&](const auto &f) {
+                parseFunc(f);
                 const std::string shortMemberName = f->getNameAsString();
                 const std::string memberName = f->getQualifiedNameAsString();
 
@@ -220,13 +221,52 @@ public:
     return true;
   }
 
+  void parseFunc(clang::FunctionDecl *func) {
+    const clang::QualType rt = func->getReturnType();
+    std::string fType = rt.getAsString();
+    std::string fName = func->getQualifiedNameAsString();
+
+    std::cout << "function " << fName << "(";
+    auto parameters = func->parameters();
+    clang::PrintingPolicy pp = clang::PrintingPolicy(clang::LangOptions());
+    pp.Bool = false;
+
+    std::for_each(
+        std::begin(parameters), std::end(parameters), [&](const auto &p) {
+          const clang::QualType qt = p->getType();
+
+          std::string paramTypeRef = qt.getUnqualifiedType().getAsString(pp);
+          // const clang::QualType qtnr = qt->getNonReferenceType();
+          // std::string paramType = qtnr.getAsString();
+          std::string paramName = p->getNameAsString();
+          if (paramName == "")
+            paramName = "<input>";
+          std::cout << paramName << " : " << paramTypeRef
+                    << ((p == *(std::end(parameters) - 1)) ? "" : ", ");
+        });
+    std::cout << ") -> " << fType << std::endl;
+  }
+
   bool VisitFunctionDecl(clang::FunctionDecl *func) {
     if (func->isGlobal())
       if (sourceManager_.isWrittenInMainFile(
               func->getSourceRange().getBegin())) {
 
-        std::cout << "Taking '" << func->getNameAsString()
-                  << "' is in main file\n";
+        const clang::QualType rt = func->getReturnType();
+        std::string fType = rt.getAsString();
+        std::string fName = func->getNameAsString();
+
+        std::cout << "function " << fName << "(";
+        auto parameters = func->parameters();
+        std::for_each(
+            std::begin(parameters), std::end(parameters), [&](const auto &p) {
+              const clang::QualType qt = p->getType();
+              std::string paramType = qt.getAsString();
+              std::string paramName = p->getNameAsString();
+              std::cout << paramName << " : " << paramType
+                        << ((p == *(std::end(parameters) - 1)) ? "" : ", ");
+            });
+        std::cout << ") -> " << fType << std::endl;
         return true;
       } else {
         // std::cout << "Skipping '" << func->getNameAsString()

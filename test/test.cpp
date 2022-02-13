@@ -42,8 +42,10 @@ struct C {
   int dup(int a) { return a * 2; };
 };
 
-void something(int a, int b) {
+void something(int a, bool b, std::string c) {
   std::cout << "print" << a << ", " << b << std::endl;
 }
+
+bool something_else(int a, bool b, std::string c) { return true; }
 
 int main() { std::cout << "hello" << std::endl; }

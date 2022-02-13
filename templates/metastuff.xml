@@ -7,7 +7,6 @@
 		return members(
 		{members.serialize}
 		{methods.serialize}
-		{functions.serialize}
 		)}};
 	</struct>
 	<file name="header" ext="h">
@@ -21,6 +20,8 @@
 		namespace meta {{
 		{structs.meta}
 		}}
+
+		{functions.serialize}
 		#endif {INCLUDE_GUARD_NAME}
 	</file>
 </template>
