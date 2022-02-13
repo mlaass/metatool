@@ -8,7 +8,7 @@ struct A {
   char cc;
   bool isBool;
   std::string s;
-  void fun(int x){;}
+  void fun(int x) { ; }
 };
 
 /**
@@ -34,7 +34,16 @@ struct C {
   float d;
 
   B bB;
-  A* pA;
+  A *pA;
+
+  int alpha() { return 0; };
+
+  void beta() { ; };
+  int dup(int a) { return a * 2; };
 };
+
+void something(int a, int b) {
+  std::cout << "print" << a << ", " << b << std::endl;
+}
 
 int main() { std::cout << "hello" << std::endl; }

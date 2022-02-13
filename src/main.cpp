@@ -40,6 +40,7 @@ namespace metastuff {
 struct Struct {
   std::string name;
   std::map<std::string, std::string> memberTemplatesFilled;
+  std::map<std::string, std::string> methodTemplatesFilled;
 };
 
 struct FileTemplate {
@@ -100,6 +101,7 @@ class StructDeclASTVisitor
 
 public:
   static std::map<std::string, metastuff::MemberStructTemplate> memberTemplates;
+  static std::map<std::string, metastuff::MemberStructTemplate> methodTemplates;
 
   static std::vector<metastuff::Struct> structData;
 
@@ -114,6 +116,7 @@ public:
       clang::ASTContext &ctx = decl->getASTContext();
       clang::SourceManager &sm = ctx.getSourceManager();
       const auto fields = decl->fields();
+      const auto methods = decl->methods();
 
       bool ignoreStruct = false;
       auto *rc = decl->getASTContext().getRawCommentForDeclNoCache(decl);
@@ -181,14 +184,64 @@ public:
           }
           s.memberTemplatesFilled[tname] = memberBuff;
         }
+        for (auto &[tname, templ8] : methodTemplates) {
+
+          std::string methodBuf;
+          std::for_each(
+              std::begin(methods), std::end(methods), [&](const auto &f) {
+                const std::string shortMemberName = f->getNameAsString();
+                const std::string memberName = f->getQualifiedNameAsString();
+
+                const clang::QualType qt = f->getType();
+                std::string memberType = qt.getAsString();
+                // some cleanup seems to be needed here!
+                if (memberType == "_Bool")
+                  memberType = "bool";
+
+                if (std::find(ignoreMembers.begin(), ignoreMembers.end(),
+                              shortMemberName) == ignoreMembers.end()) {
+
+                  methodBuf += fill_template(
+                      templ8.templ8, {{"SHORT_MEMBER_NAME", shortMemberName},
+                                      {"MEMBER_NAME", memberName},
+                                      {"MEMBER_TYPE", memberType}});
+                  methodBuf += templ8.delim;
+                }
+              });
+          if (templ8.removeLast) {
+            methodBuf =
+                methodBuf.substr(0, methodBuf.size() - templ8.delim.size());
+          }
+          s.memberTemplatesFilled[tname] = methodBuf;
+        }
         structData.push_back(s);
       }
     }
     return true;
   }
+
+  bool VisitFunctionDecl(clang::FunctionDecl *func) {
+    if (func->isGlobal())
+      if (sourceManager_.isWrittenInMainFile(
+              func->getSourceRange().getBegin())) {
+
+        std::cout << "Taking '" << func->getNameAsString()
+                  << "' is in main file\n";
+        return true;
+      } else {
+        // std::cout << "Skipping '" << func->getNameAsString()
+        //           << "' not in main file\n";
+      }
+    return true;
+  }
 };
+
 std::map<std::string, metastuff::MemberStructTemplate>
     StructDeclASTVisitor::memberTemplates = {};
+
+std::map<std::string, metastuff::MemberStructTemplate>
+    StructDeclASTVisitor::methodTemplates = {};
+
 std::vector<metastuff::Struct> StructDeclASTVisitor::structData = {};
 
 class StructDeclASTConsumer : public clang::ASTConsumer {
@@ -269,6 +322,7 @@ int main(int argc, const char *argv[]) {
         txt = e->GetText();
       fileTemplates[name] = {ext, fn, txt};
     }
+
     for (auto *e = root->FirstChildElement("member"); e != NULL;
          e = e->NextSiblingElement("member")) {
       std::string name = e->Attribute("name");
@@ -278,6 +332,17 @@ int main(int argc, const char *argv[]) {
       if (e->GetText())
         txt = e->GetText();
       StructDeclASTVisitor::memberTemplates[name] = {delim, removeLast, txt};
+    }
+
+    for (auto *e = root->FirstChildElement("method"); e != NULL;
+         e = e->NextSiblingElement("method")) {
+      std::string name = e->Attribute("name");
+      std::string delim = e->Attribute("delim");
+      bool removeLast = e->BoolAttribute("remove_last_delim");
+      std::string txt = "";
+      if (e->GetText())
+        txt = e->GetText();
+      StructDeclASTVisitor::methodTemplates[name] = {delim, removeLast, txt};
     }
   }
 
@@ -297,6 +362,10 @@ int main(int argc, const char *argv[]) {
       for (auto &[memtname, memt] : StructDeclASTVisitor::memberTemplates) {
         auto members = structEntry.memberTemplatesFilled[memtname];
         args.push_back({(std::string("members.") + memtname), members});
+      }
+      for (auto &[memtname, memt] : StructDeclASTVisitor::methodTemplates) {
+        auto members = structEntry.methodTemplatesFilled[memtname];
+        args.push_back({(std::string("methods.") + memtname), members});
       }
       args.push_back({"TYPE", structEntry.name});
       structBuf[structtname] += fill_template(structt.templ8, args);

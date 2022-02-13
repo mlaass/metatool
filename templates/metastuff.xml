@@ -1,11 +1,13 @@
 <template name="metastuff">
-	<member name="serialize" delim=", " remove_last_delim="True">
-		 member(&quot;{SHORT_MEMBER_NAME}&quot;, &amp;{MEMBER_NAME})
-	</member>
+	<member name="serialize" delim=", " remove_last_delim="True"> member(&quot;{SHORT_MEMBER_NAME}&quot;, &amp;{MEMBER_NAME})</member>
+	<method name="serialize" delim=", " remove_last_delim="True"> method&lt;{MEMBER_TYPE}&gt;(&quot;{SHORT_MEMBER_NAME}&quot;, {MEMBER_NAME}) </method>
+	<function name="serialize" delim=", " remove_last_delim="True"> function&lt;{FUNCTION_TYPE}&gt;(&quot;{FUNCTION_NAME}&quot;, {FUNCTION_NAME}) </function>
 	<struct name="meta" delim="">
 		inline auto registerMembers&lt;{TYPE}&gt;() {{
 		return members(
 		{members.serialize}
+		{methods.serialize}
+		{functions.serialize}
 		)}};
 	</struct>
 	<file name="header" ext="h">
