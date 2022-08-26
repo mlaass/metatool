@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.12)
 project(metastuff-generator)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
+add_compile_options(-fconcepts)
 
 # set(CMAKE_FIND_PACKAGE_SORT_ORDER NATURAL)
 # set(CMAKE_FIND_PACKAGE_SORT_DIRECTION DEC)

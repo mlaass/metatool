@@ -25,15 +25,13 @@ std::string replace_all(std::string str, const std::string &remove,
   return str;
 }
 
-std::string
-fill_template(std::string templ,
+std::string fill_template(std::string templ,
               const std::vector<std::pair<std::string, std::string>> &args) {
 
   for (const auto &arg : args) {
     templ = replace_all(templ, std::string("{") + arg.first + std::string("}"),
                         arg.second);
   }
-  // std::cout << templ << std::endl;
   return templ;
 }
 namespace metastuff {
@@ -46,12 +44,13 @@ struct Struct {
 struct FileTemplate {
   std::string ext;
   std::string filename;
-  std::string templ8;
+  std::string template_data;
 };
+
 struct MemberStructTemplate {
   std::string delim;
   bool removeLast;
-  std::string templ8;
+  std::string template_data;
 };
 
 std::string randomHeaderName() {
@@ -154,7 +153,7 @@ public:
       }
 
       if (!ignoreStruct) {
-        for (auto &[tname, templ8] : memberTemplates) {
+        for (auto &[tname, template_data] : memberTemplates) {
 
           std::string memberBuff;
           std::for_each(
@@ -172,19 +171,19 @@ public:
                               shortMemberName) == ignoreMembers.end()) {
 
                   memberBuff += fill_template(
-                      templ8.templ8, {{"SHORT_MEMBER_NAME", shortMemberName},
+                      template_data.template_data, {{"SHORT_MEMBER_NAME", shortMemberName},
                                       {"MEMBER_NAME", memberName},
                                       {"MEMBER_TYPE", memberType}});
-                  memberBuff += templ8.delim;
+                  memberBuff += template_data.delim;
                 }
               });
-          if (templ8.removeLast) {
+          if (template_data.removeLast) {
             memberBuff =
-                memberBuff.substr(0, memberBuff.size() - templ8.delim.size());
+                memberBuff.substr(0, memberBuff.size() - template_data.delim.size());
           }
           s.memberTemplatesFilled[tname] = memberBuff;
         }
-        for (auto &[tname, templ8] : methodTemplates) {
+        for (auto &[tname, template_data] : methodTemplates) {
 
           std::string methodBuf;
           std::for_each(
@@ -203,15 +202,15 @@ public:
                               shortMemberName) == ignoreMembers.end()) {
 
                   methodBuf += fill_template(
-                      templ8.templ8, {{"SHORT_MEMBER_NAME", shortMemberName},
+                      template_data.template_data, {{"SHORT_MEMBER_NAME", shortMemberName},
                                       {"MEMBER_NAME", memberName},
                                       {"MEMBER_TYPE", memberType}});
-                  methodBuf += templ8.delim;
+                  methodBuf += template_data.delim;
                 }
               });
-          if (templ8.removeLast) {
+          if (template_data.removeLast) {
             methodBuf =
-                methodBuf.substr(0, methodBuf.size() - templ8.delim.size());
+                methodBuf.substr(0, methodBuf.size() - template_data.delim.size());
           }
           s.memberTemplatesFilled[tname] = methodBuf;
         }
@@ -324,127 +323,148 @@ static llvm::cl::opt<std::string>
     InputFilename(llvm::cl::Positional, llvm::cl::desc("<input file>"),
                   llvm::cl::init("../test/test.cpp"));
 
+tinyxml2::XMLDocument* loadTemplate(std::string fn) {
+  auto doc = new tinyxml2::XMLDocument();
+  int err = doc->LoadFile(fn.c_str());
+  if (err){
+    std::cerr << "Error loading File " << fn << ": " << err << std::endl;
+    }
+  return doc;
+}
+
+void parseTemplates(std::string fn, auto &structTemplates, auto &fileTemplates){
+auto doc = loadTemplate(fn);
+
+  auto root = doc->FirstChildElement();
+
+  for (auto *e = root->FirstChildElement("struct"); e != NULL;
+       e = e->NextSiblingElement("struct")) {
+    std::string name = e->Attribute("name");
+    std::string delim = e->Attribute("delim");
+    bool removeLast = e->BoolAttribute("remove_last_delim");
+    std::string txt = "";
+    if (e->GetText())
+      txt = e->GetText();
+    structTemplates[name] = {delim, removeLast, txt};
+  }
+  for (auto *e = root->FirstChildElement("file"); e != NULL;
+       e = e->NextSiblingElement("file")) {
+    std::string name = e->Attribute("name");
+    std::string ext = e->Attribute("ext");
+
+    std::string fn = ((OutputFilename == "") ? name : OutputFilename);
+    fn += (std::string(".") + ext);
+    std::string txt = "";
+    if (e->GetText())
+      txt = e->GetText();
+    fileTemplates[name] = {ext, fn, txt};
+  }
+
+  for (auto *e = root->FirstChildElement("member"); e != NULL;
+       e = e->NextSiblingElement("member")) {
+    std::string name = e->Attribute("name");
+    std::string delim = e->Attribute("delim");
+    bool removeLast = e->BoolAttribute("remove_last_delim");
+    std::string txt = "";
+    if (e->GetText())
+      txt = e->GetText();
+    StructDeclASTVisitor::memberTemplates[name] = {delim, removeLast, txt};
+  }
+
+  for (auto *e = root->FirstChildElement("method"); e != NULL;
+       e = e->NextSiblingElement("method")) {
+    std::string name = e->Attribute("name");
+    std::string delim = e->Attribute("delim");
+    bool removeLast = e->BoolAttribute("remove_last_delim");
+    std::string txt = "";
+    if (e->GetText())
+      txt = e->GetText();
+    StructDeclASTVisitor::methodTemplates[name] = {delim, removeLast, txt};
+  }
+  delete doc;
+}
+
 int main(int argc, const char *argv[]) {
 
   clang::tooling::CommonOptionsParser opts = {argc, argv, ms_generator};
 
   std::map<std::string, metastuff::MemberStructTemplate> structTemplates;
   std::map<std::string, metastuff::FileTemplate> fileTemplates;
-  const fs::path templ{TemplateXMLOption.c_str()};
-  if (fs::exists(templ)) {
-    using namespace tinyxml2;
-    XMLDocument doc;
-    int err = doc.LoadFile(templ.c_str());
-    if (err)
-      std::cerr << "Error loading File " << templ << ": " << err << std::endl;
 
-    auto root = doc.FirstChildElement();
+  // PARSING THE TEMPLATE:
+  parseTemplates(TemplateXMLOption.c_str(), structTemplates, fileTemplates);
 
-    for (auto *e = root->FirstChildElement("struct"); e != NULL;
-         e = e->NextSiblingElement("struct")) {
-      std::string name = e->Attribute("name");
-      std::string delim = e->Attribute("delim");
-      bool removeLast = e->BoolAttribute("remove_last_delim");
-      std::string txt = "";
-      if (e->GetText())
-        txt = e->GetText();
-      structTemplates[name] = {delim, removeLast, txt};
-    }
-    for (auto *e = root->FirstChildElement("file"); e != NULL;
-         e = e->NextSiblingElement("file")) {
-      std::string name = e->Attribute("name");
-      std::string ext = e->Attribute("ext");
-
-      std::string fn = ((OutputFilename == "") ? name : OutputFilename);
-      fn += (std::string(".") + ext);
-      std::string txt = "";
-      if (e->GetText())
-        txt = e->GetText();
-      fileTemplates[name] = {ext, fn, txt};
-    }
-
-    for (auto *e = root->FirstChildElement("member"); e != NULL;
-         e = e->NextSiblingElement("member")) {
-      std::string name = e->Attribute("name");
-      std::string delim = e->Attribute("delim");
-      bool removeLast = e->BoolAttribute("remove_last_delim");
-      std::string txt = "";
-      if (e->GetText())
-        txt = e->GetText();
-      StructDeclASTVisitor::memberTemplates[name] = {delim, removeLast, txt};
-    }
-
-    for (auto *e = root->FirstChildElement("method"); e != NULL;
-         e = e->NextSiblingElement("method")) {
-      std::string name = e->Attribute("name");
-      std::string delim = e->Attribute("delim");
-      bool removeLast = e->BoolAttribute("remove_last_delim");
-      std::string txt = "";
-      if (e->GetText())
-        txt = e->GetText();
-      StructDeclASTVisitor::methodTemplates[name] = {delim, removeLast, txt};
-    }
-  }
 
   const auto files = opts.getSourcePathList();
   clang::tooling::ClangTool tool{opts.getCompilations(), files};
 
-  auto ec = tool.run(
-      clang::tooling::newFrontendActionFactory<StructDeclFrontendAction>()
-          .get());
+  auto ec = tool.run(clang::tooling::newFrontendActionFactory<StructDeclFrontendAction>().get());
 
-  std::string includeBuff;
+  // struct templates buffer
   std::map<std::string, std::string> structBuf;
-  for (const auto &[structtname, structt] : structTemplates) {
-    structBuf[structtname] = "";
+  for (const auto &[struct_templ_name, struct_templ] : structTemplates) {
+    structBuf[struct_templ_name] = "";
     for (auto &structEntry : StructDeclASTVisitor::structData) {
+
+      //collect member + method args
       std::vector<std::pair<std::string, std::string>> args;
-      for (auto &[memtname, memt] : StructDeclASTVisitor::memberTemplates) {
-        auto members = structEntry.memberTemplatesFilled[memtname];
-        args.push_back({(std::string("members.") + memtname), members});
+      for (auto &[mem_templ_name, mem_templ] : StructDeclASTVisitor::memberTemplates) {
+        auto members = structEntry.memberTemplatesFilled[mem_templ_name];
+        args.push_back({(std::string("members.") + mem_templ_name), members});
       }
-      for (auto &[memtname, memt] : StructDeclASTVisitor::methodTemplates) {
-        auto members = structEntry.methodTemplatesFilled[memtname];
-        args.push_back({(std::string("methods.") + memtname), members});
+
+      for (auto &[mem_templ_name, mem_templ] : StructDeclASTVisitor::methodTemplates) {
+        auto members = structEntry.methodTemplatesFilled[mem_templ_name];
+        args.push_back({(std::string("methods.") + mem_templ_name), members});
       }
+
       args.push_back({"TYPE", structEntry.name});
-      structBuf[structtname] += fill_template(structt.templ8, args);
-      structBuf[structtname] += structt.delim;
+
+      structBuf[struct_templ_name] += fill_template(struct_templ.template_data, args);
+      structBuf[struct_templ_name] += struct_templ.delim;
+
     }
-    if (structt.removeLast) {
-      structBuf[structtname] = structBuf[structtname].substr(
-          0, structBuf[structtname].size() - structt.delim.size());
+
+    if (struct_templ.removeLast) {
+      structBuf[struct_templ_name] = structBuf[struct_templ_name].substr(
+          0, structBuf[struct_templ_name].size() - struct_templ.delim.size());
     }
   }
 
-  // includes
+  // add files include buffer
+  std::string includeBuff;
   {
     for (const auto &f : files) {
       includeBuff += fill_template("#include <{FILE}>\n", {{"FILE", f}});
     }
   }
-  std::vector<std::pair<std::string, std::string>> args;
 
-  for (const auto &[structtname, structt] : structTemplates) {
+  // collect args for struct templates
+  std::vector<std::pair<std::string, std::string>> args;
+  for (const auto &[struct_templ_name, struct_templ] : structTemplates) {
     args.push_back(
-        {(std::string("structs.") + structtname), structBuf[structtname]});
+        {(std::string("structs.") + struct_templ_name), structBuf[struct_templ_name]});
   }
-  for (const auto &[filetname, filet] : fileTemplates) {
-    args.push_back({(std::string("filename.") + filetname), filet.filename});
+
+  // collect args for file templates
+  for (const auto &[file_templ_name, file_templ] : fileTemplates) {
+    args.push_back({(std::string("filename.") + file_templ_name), file_templ.filename});
   }
 
   args.push_back({"INCLUDE_GUARD_NAME", metastuff::randomHeaderName()});
   args.push_back({"INCLUDES", includeBuff});
-  for (const auto &[filetname, filet] : fileTemplates) {
-    auto output = fill_template(filet.templ8, args);
+
+  // generate and fill files
+  for (const auto &[file_templ_name, file_templ] : fileTemplates) {
+    auto output = fill_template(file_templ.template_data, args);
     if (OutputFilename != "") {
-      std::ofstream outfile((filet.filename).c_str());
+      std::ofstream outfile((file_templ.filename).c_str());
       if (outfile.good()) {
         outfile << output << std::endl;
         outfile.close();
       }
     } else {
-      std::cout << filetname << ":" << std::endl;
+      std::cout << file_templ_name << ":" << std::endl;
       std::cout << output << std::endl;
     }
   }
