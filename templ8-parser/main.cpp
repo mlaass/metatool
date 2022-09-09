@@ -3,6 +3,7 @@
 #include "parser/templ8Lexer.h"
 #include "parser/templ8Parser.h"
 #include "Visitor.h"
+#include "Templ8.hpp"
 
 using namespace std;
 using namespace antlr4;

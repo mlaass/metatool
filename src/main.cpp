@@ -12,6 +12,8 @@
 #include <clang/Tooling/Tooling.h>
 #include <llvm/Support/CommandLine.h>
 
+#include <Templ8.hpp>
+
 namespace fs = std::filesystem;
 
 std::string replace_all(std::string str, const std::string &remove,
@@ -25,7 +27,8 @@ std::string replace_all(std::string str, const std::string &remove,
   return str;
 }
 
-std::string fill_template(std::string templ,
+std::string
+fill_template(std::string templ,
               const std::vector<std::pair<std::string, std::string>> &args) {
 
   for (const auto &arg : args) {
@@ -101,7 +104,8 @@ class StructDeclASTVisitor
 public:
   static std::map<std::string, metastuff::MemberStructTemplate> memberTemplates;
   static std::map<std::string, metastuff::MemberStructTemplate> methodTemplates;
-  static std::map<std::string, metastuff::MemberStructTemplate> functionTemplates;
+  static std::map<std::string, metastuff::MemberStructTemplate>
+      functionTemplates;
 
   static std::vector<metastuff::Struct> structData;
 
@@ -171,16 +175,17 @@ public:
                 if (std::find(ignoreMembers.begin(), ignoreMembers.end(),
                               shortMemberName) == ignoreMembers.end()) {
 
-                  memberBuff += fill_template(
-                      template_data.template_data, {{"SHORT_MEMBER_NAME", shortMemberName},
-                                      {"MEMBER_NAME", memberName},
-                                      {"MEMBER_TYPE", memberType}});
+                  memberBuff +=
+                      fill_template(template_data.template_data,
+                                    {{"SHORT_MEMBER_NAME", shortMemberName},
+                                     {"MEMBER_NAME", memberName},
+                                     {"MEMBER_TYPE", memberType}});
                   memberBuff += template_data.delim;
                 }
               });
           if (template_data.removeLast) {
-            memberBuff =
-                memberBuff.substr(0, memberBuff.size() - template_data.delim.size());
+            memberBuff = memberBuff.substr(0, memberBuff.size() -
+                                                  template_data.delim.size());
           }
           s.memberTemplatesFilled[tname] = memberBuff;
         }
@@ -202,16 +207,17 @@ public:
                 if (std::find(ignoreMembers.begin(), ignoreMembers.end(),
                               shortMemberName) == ignoreMembers.end()) {
 
-                  methodBuf += fill_template(
-                      template_data.template_data, {{"SHORT_MEMBER_NAME", shortMemberName},
-                                      {"MEMBER_NAME", memberName},
-                                      {"MEMBER_TYPE", memberType}});
+                  methodBuf +=
+                      fill_template(template_data.template_data,
+                                    {{"SHORT_MEMBER_NAME", shortMemberName},
+                                     {"MEMBER_NAME", memberName},
+                                     {"MEMBER_TYPE", memberType}});
                   methodBuf += template_data.delim;
                 }
               });
           if (template_data.removeLast) {
-            methodBuf =
-                methodBuf.substr(0, methodBuf.size() - template_data.delim.size());
+            methodBuf = methodBuf.substr(0, methodBuf.size() -
+                                                template_data.delim.size());
           }
           s.memberTemplatesFilled[tname] = methodBuf;
         }
@@ -312,8 +318,12 @@ static llvm::cl::OptionCategory ms_generator{"metastuff-gen options"};
 static llvm::cl::extrahelp
     CommonHelp(clang::tooling::CommonOptionsParser::HelpMessage);
 
+static llvm::cl::opt<std::string> TemplateT8Option{
+    "t", llvm::cl::desc("Name or path of t8 template"),
+    llvm::cl::value_desc("path"), llvm::cl::cat(ms_generator)};
+
 static llvm::cl::opt<std::string> TemplateXMLOption{
-    "t", llvm::cl::desc("Name or path of XML template"),
+    "x", llvm::cl::desc("Name or path of XML template"),
     llvm::cl::value_desc("path"), llvm::cl::cat(ms_generator)};
 
 static llvm::cl::opt<std::string> OutputFilename{
@@ -324,17 +334,18 @@ static llvm::cl::opt<std::string>
     InputFilename(llvm::cl::Positional, llvm::cl::desc("<input file>"),
                   llvm::cl::init("../test/test.cpp"));
 
-tinyxml2::XMLDocument* loadTemplate(std::string fn) {
+tinyxml2::XMLDocument *loadXMLTemplate(std::string fn) {
   auto doc = new tinyxml2::XMLDocument();
   int err = doc->LoadFile(fn.c_str());
-  if (err){
+  if (err) {
     std::cerr << "Error loading File " << fn << ": " << err << std::endl;
-    }
+  }
   return doc;
 }
 
-void parseTemplates(std::string fn, auto &structTemplates, auto &fileTemplates){
-auto doc = loadTemplate(fn);
+void parseXMLTemplates(std::string fn, auto &structTemplates,
+                       auto &fileTemplates) {
+  auto doc = loadXMLTemplate(fn);
 
   auto root = doc->FirstChildElement();
 
@@ -385,6 +396,63 @@ auto doc = loadTemplate(fn);
   delete doc;
 }
 
+bool parseBool(std::string str) {
+  static const std::string TRUE_VALS[] = {"true", "True", "TRUE"};
+  static const std::string FALSE_VALS[] = {"false", "False", "FALSE"};
+
+  for (const auto &v : TRUE_VALS) {
+    if (v == str) {
+      return true;
+    }
+  }
+
+  for (const auto &v : FALSE_VALS) {
+    if (v == str) {
+      return false;
+    }
+  }
+  return false;
+}
+void parseT8Templates(std::string fn, auto &structTemplates,
+                      auto &fileTemplates) {
+  Templ8 t8 = loadTempl8(fn);
+
+  for (auto d : t8.definitions) {
+    if (d.type == "struct") {
+      std::string name = d.attributes["name"];
+      std::string delim = d.attributes["delim"];
+      bool removeLast = parseBool(d.attributes["remove_last_delim"]);
+      structTemplates[name] = {delim, removeLast, d.code};
+    }
+
+    if (d.type == "file") {
+      std::string name = d.attributes["name"];
+      std::string ext = d.attributes["ext"];
+
+      std::string fn = ((OutputFilename == "") ? name : OutputFilename);
+      fn += (std::string(".") + ext);
+      fileTemplates[name] = {ext, fn, d.code};
+    }
+
+    if (d.type == "member") {
+      std::string name = d.attributes["name"];
+      std::string delim = d.attributes["delim"];
+      bool removeLast = parseBool(d.attributes["remove_last_delim"]);
+
+      StructDeclASTVisitor::memberTemplates[name] = {delim, removeLast, d.code};
+    }
+
+    if (d.type == "method") {
+      std::string name = d.attributes["name"];
+      std::string delim = d.attributes["delim"];
+      bool removeLast = parseBool(d.attributes["remove_last_delim"]);
+
+      StructDeclASTVisitor::methodTemplates[name] = {d.attributes["delim"],
+                                                     removeLast, d.code};
+    }
+  }
+}
+
 int main(int argc, const char *argv[]) {
 
   clang::tooling::CommonOptionsParser opts = {argc, argv, ms_generator};
@@ -393,13 +461,14 @@ int main(int argc, const char *argv[]) {
   std::map<std::string, metastuff::FileTemplate> fileTemplates;
 
   // PARSING THE TEMPLATE:
-  parseTemplates(TemplateXMLOption.c_str(), structTemplates, fileTemplates);
-
+  parseXMLTemplates(TemplateXMLOption.c_str(), structTemplates, fileTemplates);
 
   const auto files = opts.getSourcePathList();
   clang::tooling::ClangTool tool{opts.getCompilations(), files};
 
-  auto ec = tool.run(clang::tooling::newFrontendActionFactory<StructDeclFrontendAction>().get());
+  auto ec = tool.run(
+      clang::tooling::newFrontendActionFactory<StructDeclFrontendAction>()
+          .get());
 
   // struct templates buffer
   std::map<std::string, std::string> structBuf;
@@ -407,23 +476,25 @@ int main(int argc, const char *argv[]) {
     structBuf[struct_templ_name] = "";
     for (auto &structEntry : StructDeclASTVisitor::structData) {
 
-      //collect member + method args
+      // collect member + method args
       std::vector<std::pair<std::string, std::string>> args;
-      for (auto &[mem_templ_name, mem_templ] : StructDeclASTVisitor::memberTemplates) {
+      for (auto &[mem_templ_name, mem_templ] :
+           StructDeclASTVisitor::memberTemplates) {
         auto members = structEntry.memberTemplatesFilled[mem_templ_name];
         args.push_back({(std::string("members.") + mem_templ_name), members});
       }
 
-      for (auto &[mem_templ_name, mem_templ] : StructDeclASTVisitor::methodTemplates) {
+      for (auto &[mem_templ_name, mem_templ] :
+           StructDeclASTVisitor::methodTemplates) {
         auto members = structEntry.methodTemplatesFilled[mem_templ_name];
         args.push_back({(std::string("methods.") + mem_templ_name), members});
       }
 
       args.push_back({"TYPE", structEntry.name});
 
-      structBuf[struct_templ_name] += fill_template(struct_templ.template_data, args);
+      structBuf[struct_templ_name] +=
+          fill_template(struct_templ.template_data, args);
       structBuf[struct_templ_name] += struct_templ.delim;
-
     }
 
     if (struct_templ.removeLast) {
@@ -443,13 +514,14 @@ int main(int argc, const char *argv[]) {
   // collect args for struct templates
   std::vector<std::pair<std::string, std::string>> args;
   for (const auto &[struct_templ_name, struct_templ] : structTemplates) {
-    args.push_back(
-        {(std::string("structs.") + struct_templ_name), structBuf[struct_templ_name]});
+    args.push_back({(std::string("structs.") + struct_templ_name),
+                    structBuf[struct_templ_name]});
   }
 
   // collect args for file templates
   for (const auto &[file_templ_name, file_templ] : fileTemplates) {
-    args.push_back({(std::string("filename.") + file_templ_name), file_templ.filename});
+    args.push_back(
+        {(std::string("filename.") + file_templ_name), file_templ.filename});
   }
 
   args.push_back({"INCLUDE_GUARD_NAME", metastuff::randomHeaderName()});

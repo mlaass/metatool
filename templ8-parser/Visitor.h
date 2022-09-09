@@ -1,6 +1,7 @@
-#include "antlr4-runtime.h"
+#pragma once
+
+#include <antlr4-runtime.h>
 #include "parser/templ8BaseVisitor.h"
-#include "Templ8.hpp"
 #include <string>
 
 class Visitor : templ8BaseVisitor {

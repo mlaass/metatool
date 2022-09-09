@@ -27,25 +27,33 @@ find_package(ANTLR REQUIRED)
 # CMake commands copied by the CMake file for CImg
 
 # To use PKG_CHECK_MODULES to find some optional packages
-find_package(PkgConfig)
+# find_package(PkgConfig)
 
 
 # Call macro to add lexer and grammar to your build dependencies.
 antlr_target(Templ8GrammarParser templ8.g4 VISITOR OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/parser/)
 
 # add our project source directories
+set(TEMPL8_INCLUDE_DIRS
+${ANTLR4_INCLUDE_DIRS}
+${PROJECT_SOURCE_DIR}
+${CMAKE_CURRENT_BINARY_DIR}/antlr4_runtime/src/antlr4_runtime/runtime/Cpp/runtime/src
+${PROJECT_SOURCE_DIR}/parser/
+PARENT_SCOPE)
+
 include_directories(
-  ${PROJECT_SOURCE_DIR}
-  ${PROJECT_SOURCE_DIR}/build/antlr4_runtime/src/antlr4_runtime/runtime/Cpp/runtime/src
-	${PROJECT_SOURCE_DIR}/parser/
+  ${TEMPL8_INCLUDE_DIRS}
   )
 
 
-add_executable(antlr4-test main.cpp Visitor.cpp
+add_executable(antlr4-test main.cpp Visitor.cpp Templ8.cpp
                ${ANTLR_Templ8GrammarParser_CXX_OUTPUTS})
+
+add_library(templ8 Visitor.cpp Templ8.cpp ${ANTLR_Templ8GrammarParser_CXX_OUTPUTS})
 
 # link required libraries
 target_link_libraries(antlr4-test antlr4_static ${SYSTEM_LIBS} pthread)
+target_link_libraries(templ8 antlr4_static ${SYSTEM_LIBS} pthread)
 
 # copy the input file next to the generated executable
 add_custom_command(TARGET antlr4-test POST_BUILD

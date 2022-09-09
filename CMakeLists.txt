@@ -26,17 +26,23 @@ add_definitions(${CLANG_DEFINITIONS})
 
 add_llvm_executable(metastuff-gen src/main.cpp)
 
+add_subdirectory(templ8-parser)
+message(STATUS "templ8 include dirs: ${TEMPL8_INCLUDE_DIRS}")
 
 
 target_include_directories(metastuff-gen
 PUBLIC 3rdParty/argparse/include
 PUBLIC 3rdParty/tinyxml2
+PUBLIC templ8-parser
+${ANTLR4_INCLUDE_DIRS}
+${TEMPL8_INCLUDE_DIRS}
 )
 
 target_compile_options(metastuff-gen PRIVATE -fexceptions)
 
 target_link_libraries(metastuff-gen
 PRIVATE clangTooling
+PUBLIC templ8
 PUBLIC tinyxml2)
 
 
