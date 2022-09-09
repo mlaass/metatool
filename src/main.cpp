@@ -101,6 +101,7 @@ class StructDeclASTVisitor
 public:
   static std::map<std::string, metastuff::MemberStructTemplate> memberTemplates;
   static std::map<std::string, metastuff::MemberStructTemplate> methodTemplates;
+  static std::map<std::string, metastuff::MemberStructTemplate> functionTemplates;
 
   static std::vector<metastuff::Struct> structData;
 
