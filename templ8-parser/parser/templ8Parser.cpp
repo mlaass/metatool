@@ -46,28 +46,29 @@ void templ8ParserInitialize() {
       "file", "name", "definition", "attribute", "deftype", "codeblock"
     },
     std::vector<std::string>{
-      "", "':'", "'='", "'def'", "", "','", "'member'", "'struct'", "'function'", 
-      "'file'"
+      "", "':'", "'='", "'def'", "", "','", "'member'", "'method'", "'argument'", 
+      "'struct'", "'function'", "'file'"
     },
     std::vector<std::string>{
-      "", "", "", "BEGIN", "END", "COMMA", "MEMBER", "STRUCT", "FUNCTION", 
-      "FILE", "CODE", "STRING", "NAME", "NEWLINE", "COMMENT", "WHITESPACE"
+      "", "", "", "BEGIN", "END", "COMMA", "MEMBER", "METHOD", "ARGUMENT", 
+      "STRUCT", "FUNCTION", "FILE", "CODE", "STRING", "NAME", "NEWLINE", 
+      "COMMENT", "WHITESPACE"
     }
   );
   static const int32_t serializedATNSegment[] = {
-  	4,1,15,50,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,1,0,1,0,1,0,
+  	4,1,17,50,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,1,0,1,0,1,0,
   	1,0,3,0,17,8,0,5,0,19,8,0,10,0,12,0,22,9,0,1,0,1,0,1,1,1,1,1,1,1,2,1,
   	2,1,2,1,2,3,2,33,8,2,5,2,35,8,2,10,2,12,2,38,9,2,1,2,1,2,1,3,1,3,1,3,
-  	1,3,1,4,1,4,1,5,1,5,1,5,0,0,6,0,2,4,6,8,10,0,1,1,0,6,9,47,0,12,1,0,0,
+  	1,3,1,4,1,4,1,5,1,5,1,5,0,0,6,0,2,4,6,8,10,0,1,1,0,6,11,47,0,12,1,0,0,
   	0,2,25,1,0,0,0,4,28,1,0,0,0,6,41,1,0,0,0,8,45,1,0,0,0,10,47,1,0,0,0,12,
-  	13,3,2,1,0,13,20,5,13,0,0,14,16,3,4,2,0,15,17,5,13,0,0,16,15,1,0,0,0,
+  	13,3,2,1,0,13,20,5,15,0,0,14,16,3,4,2,0,15,17,5,15,0,0,16,15,1,0,0,0,
   	16,17,1,0,0,0,17,19,1,0,0,0,18,14,1,0,0,0,19,22,1,0,0,0,20,18,1,0,0,0,
   	20,21,1,0,0,0,21,23,1,0,0,0,22,20,1,0,0,0,23,24,5,0,0,1,24,1,1,0,0,0,
-  	25,26,5,12,0,0,26,27,5,1,0,0,27,3,1,0,0,0,28,29,5,3,0,0,29,36,3,8,4,0,
+  	25,26,5,14,0,0,26,27,5,1,0,0,27,3,1,0,0,0,28,29,5,3,0,0,29,36,3,8,4,0,
   	30,32,3,6,3,0,31,33,5,5,0,0,32,31,1,0,0,0,32,33,1,0,0,0,33,35,1,0,0,0,
   	34,30,1,0,0,0,35,38,1,0,0,0,36,34,1,0,0,0,36,37,1,0,0,0,37,39,1,0,0,0,
-  	38,36,1,0,0,0,39,40,3,10,5,0,40,5,1,0,0,0,41,42,5,12,0,0,42,43,5,2,0,
-  	0,43,44,5,11,0,0,44,7,1,0,0,0,45,46,7,0,0,0,46,9,1,0,0,0,47,48,5,10,0,
+  	38,36,1,0,0,0,39,40,3,10,5,0,40,5,1,0,0,0,41,42,5,14,0,0,42,43,5,2,0,
+  	0,43,44,5,13,0,0,44,7,1,0,0,0,45,46,7,0,0,0,46,9,1,0,0,0,47,48,5,12,0,
   	0,48,11,1,0,0,0,4,16,20,32,36
   };
   staticData->serializedATN = antlr4::atn::SerializedATNView(serializedATNSegment, sizeof(serializedATNSegment) / sizeof(serializedATNSegment[0]));
@@ -423,6 +424,14 @@ tree::TerminalNode* templ8Parser::DeftypeContext::MEMBER() {
   return getToken(templ8Parser::MEMBER, 0);
 }
 
+tree::TerminalNode* templ8Parser::DeftypeContext::METHOD() {
+  return getToken(templ8Parser::METHOD, 0);
+}
+
+tree::TerminalNode* templ8Parser::DeftypeContext::ARGUMENT() {
+  return getToken(templ8Parser::ARGUMENT, 0);
+}
+
 tree::TerminalNode* templ8Parser::DeftypeContext::STRUCT() {
   return getToken(templ8Parser::STRUCT, 0);
 }
@@ -466,6 +475,8 @@ templ8Parser::DeftypeContext* templ8Parser::deftype() {
     _la = _input->LA(1);
     if (!((((_la & ~ 0x3fULL) == 0) &&
       ((1ULL << _la) & ((1ULL << templ8Parser::MEMBER)
+      | (1ULL << templ8Parser::METHOD)
+      | (1ULL << templ8Parser::ARGUMENT)
       | (1ULL << templ8Parser::STRUCT)
       | (1ULL << templ8Parser::FUNCTION)
       | (1ULL << templ8Parser::FILE))) != 0))) {

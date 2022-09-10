@@ -7,6 +7,7 @@
 
 using namespace std;
 using namespace antlr4;
+
 int main(int argc, const char* argv[]) {
     std::ifstream stream;
     stream.open("test.templ8");
@@ -19,5 +20,6 @@ int main(int argc, const char* argv[]) {
     Visitor visitor;
     Templ8 templ8 = std::any_cast<Templ8>( visitor.visitFile(tree));
     templ8.print();
+
     return 0;
 }

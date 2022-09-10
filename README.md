@@ -1,50 +1,53 @@
-# metastuff-gen
-Clang based boilerplate generator for serialization/deserialization introspection interfacing with embedded languages etc.
+# metatool
+
+Clang based templated code generator from C/C++ sources. Useful for serialization/deserialization, introspection and interfacing with embedded languages etc.
 
 This is a fork of [metastuff-clang-generator](https://github.com/btaczala/metastuff-clang-generator)
 
-Extensible using xml templates.
+Extensible using templates written in either xml or my own template format t8.
 
-Support so far for the following targets:
+the templates subdirectory contains a selection of templates ready to use. currenlt supporting the following targets:
 * [nlohmann::json](https://github.com/nlohmann/json) JSON for Modern C++
 * [sol2](https://github.com/ThePhD/sol2) Lua API wrapper for C++
 * [metastuff](https://github.com/eliasdaler/MetaStuff)
 *
-# Prerequisites for building
-[clang](https://clang.llvm.org/) & [llvm](https://llvm.org/) version 9 is required to be installed as generating is based on [libTooling](https://clang.llvm.org/docs/LibTooling.html) from LLVM/Clang
+## Prerequisites for building
+Cmake and [clang](https://clang.llvm.org/) & [llvm](https://llvm.org/) version 9 is required to be installed as generating is based on [libTooling](https://clang.llvm.org/docs/LibTooling.html) from LLVM/Clang
 e.g. on linux
 
-```
-$ sudo apt install llvm-9-dev libclang-9-dev
+```sh
+sudo apt install llvm-9-dev libclang-9-dev
 ```
 
-# Building
+## Building
+
 For building you need to have llvm & clang installed then standard cmake stuff:
-```
-$ git clone
-$ cd metastuff-gen
-$ git submodule update --init --recursive
-$ mkdir build && cd build
-$ cmake ..
-$ cmake --build . --config Release
+
+```sh
+git clone
+cd metatool
+git submodule update --init --recursive
+mkdir build && cd build
+cmake ..
+cmake --build . --config Release
 ```
 
-# Usage
-
+## Usage
 
 To properly use this on actual headers you need a bit of fine tuning:
 As clang needs a compilation database to work with you can either create a json file `compile_commands.json' with cmake if you are using cmake in your project:
  `cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON`
 
-Or you need to figure out where default includes are for clang and pass them to metastuff-gen command line. See example:
+Or you need to figure out where default includes are for clang and pass them to metatool-gen command line. See example:
 
- ```
- $ cd build/
- $ ./metastuff-gen -p ../test -t ../templates/nlohmann-json.xml -o test  ../test/test.cpp -- -I/usr/lib/llvm-9/include -std=c++17
+ ```sh
+ cd build/
+ ./metatool-gen -p ../test -t ../templates/nlohmann-json.xml -o test  ../test/test.cpp -- -I/usr/lib/llvm-9/include -std=c++17
 
  ```
 
  where test.cpp:
+
  ```cpp
 #include <iostream>
 
@@ -157,11 +160,12 @@ template <> struct adl_serializer<C> {
 
 ```
 
-# Detailed usage
-```
-$ metastuff-gen --help
+## Detailed usage
 
-USAGE: metastuff-gen [options] <source0> [... <sourceN>]
+```sh
+$ metatool-gen --help
+
+USAGE: metatool-gen [options] <source0> [... <sourceN>]
 
 OPTIONS:
 
@@ -171,12 +175,13 @@ Generic Options:
   -help-list                 - Display list of available options (-help-list-hidden for more)
   -version                   - Display the version of this program
 
-metastuff-generator options:
+metatool-generator options:
 
   -extra-arg=<string>        - Additional argument to append to the compiler command line
   -extra-arg-before=<string> - Additional argument to prepend to the compiler command line
   -p=<string>                - Build path
-  -t=<filename>              - path to xml template file
+  -x=<filename>              - path to xml template file
+  -t=<filename>              - path to t8 template file
 
 -p <build-path> is used to read a compile command database.
 

@@ -5,7 +5,7 @@ file        : (name NEWLINE (definition NEWLINE?)* ) EOF;
 name        : NAME ':';
 definition  : BEGIN deftype (attribute COMMA?)* codeblock;
 attribute   : NAME '=' STRING;
-deftype     : MEMBER | STRUCT | FUNCTION | FILE;
+deftype     : MEMBER | METHOD | ARGUMENT | STRUCT | FUNCTION | FILE ;
 codeblock   : CODE;
 
 // lexer
@@ -15,6 +15,8 @@ END         : NEWLINE 'end';
 COMMA       : ',';
 
 MEMBER      : 'member';
+METHOD      : 'method';
+ARGUMENT    : 'argument';
 STRUCT      : 'struct';
 FUNCTION    : 'function';
 FILE        : 'file';

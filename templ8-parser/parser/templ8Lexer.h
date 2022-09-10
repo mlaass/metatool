@@ -12,9 +12,9 @@
 class  templ8Lexer : public antlr4::Lexer {
 public:
   enum {
-    T__0 = 1, T__1 = 2, BEGIN = 3, END = 4, COMMA = 5, MEMBER = 6, STRUCT = 7, 
-    FUNCTION = 8, FILE = 9, CODE = 10, STRING = 11, NAME = 12, NEWLINE = 13, 
-    COMMENT = 14, WHITESPACE = 15
+    T__0 = 1, T__1 = 2, BEGIN = 3, END = 4, COMMA = 5, MEMBER = 6, METHOD = 7, 
+    ARGUMENT = 8, STRUCT = 9, FUNCTION = 10, FILE = 11, CODE = 12, STRING = 13, 
+    NAME = 14, NEWLINE = 15, COMMENT = 16, WHITESPACE = 17
   };
 
   explicit templ8Lexer(antlr4::CharStream *input);

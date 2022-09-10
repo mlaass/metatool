@@ -46,20 +46,20 @@ include_directories(
   )
 
 
-add_executable(antlr4-test main.cpp Visitor.cpp Templ8.cpp
+add_executable(templ8-test main.cpp Visitor.cpp Templ8.cpp
                ${ANTLR_Templ8GrammarParser_CXX_OUTPUTS})
 
 add_library(templ8 Visitor.cpp Templ8.cpp ${ANTLR_Templ8GrammarParser_CXX_OUTPUTS})
 
 # link required libraries
-target_link_libraries(antlr4-test antlr4_static ${SYSTEM_LIBS} pthread)
+target_link_libraries(templ8-test antlr4_static ${SYSTEM_LIBS} pthread)
 target_link_libraries(templ8 antlr4_static ${SYSTEM_LIBS} pthread)
 
 # copy the input file next to the generated executable
-add_custom_command(TARGET antlr4-test POST_BUILD
+add_custom_command(TARGET templ8-test POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
   "${PROJECT_SOURCE_DIR}/test.templ8"
-  $<TARGET_FILE_DIR:antlr4-test>)
+  $<TARGET_FILE_DIR:templ8-test>)
 
 # necessary because the default working directory of Visual Studio
 # is not the same as the one in which the binary is created
@@ -67,9 +67,9 @@ add_custom_command(TARGET antlr4-test POST_BUILD
 # one for when you launch the executale in Visual Studio (CTRL+F5)
 # one for when you launch it normally
 if (WIN32)
-add_custom_command(TARGET antlr4-test POST_BUILD
+add_custom_command(TARGET templ8-test POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
   "${PROJECT_SOURCE_DIR}/tes.templ8"
-  $<TARGET_FILE_DIR:antlr4-test>/../)
+  $<TARGET_FILE_DIR:templ8-test>/../)
 endif()
 

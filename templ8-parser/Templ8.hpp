@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include <map>
@@ -8,6 +9,7 @@
 
 #include "parser/templ8Lexer.h"
 #include "parser/templ8Parser.h"
+
 #include "Visitor.h"
 
 struct Definition {
@@ -34,4 +36,6 @@ struct Templ8 {
       d.print();
   }
 };
-Templ8 loadTempl8(std::string fn);
+
+Templ8 streamTempl8(std::istream & stream);
+Templ8 loadTempl8(const std::string &fn);
