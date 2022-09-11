@@ -8,7 +8,8 @@ struct A {
   char cc;
   bool isBool;
   std::string s;
-  void fun(int x) { ; }
+  void funA(int x) { a = x; }
+  void funB(const std::string &x) { s = x; }
 };
 
 /**
@@ -39,12 +40,10 @@ struct C {
   int alpha() { return 0; };
 
   void beta() { ; };
-  int dup(int a) { return a * 2; };
+  int gamma(int a, int b, int c) { return a * b + c; };
 };
 
-void something(int a, bool b, std::string c) {
-  std::cout << "print" << a << ", " << b << std::endl;
-}
+void something(int a, bool b, std::string c) { std::cout << "print" << a << ", " << b << std::endl; }
 
 bool something_else(int a, bool b, std::string c) { return true; }
 

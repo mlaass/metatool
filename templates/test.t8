@@ -1,26 +1,24 @@
 test-template:
 
-def member name="header" delim="" remove_last_delim="False" ->
-  {TYPE} {SHORT_NAME};
+def member name="header" delim="\n" remove_last_delim="False" ->
+  {SHORT_NAME}:{TYPE};
 end
 
 def argument name="header" delim=", " remove_last_delim="True" ->
-  {TYPE} {NAME}
+  {NAME}:{TYPE}
 end
 
-def method name="header" delim="" remove_last_delim="False" ->
-
-    {TYPE} {SHORT_NAME}({arguments.header});
-
+def method name="header" delim=";\n" remove_last_delim="TRUE" ->
+  {TYPE} {SHORT_NAME}({arguments.header})
 end
 
 
 def struct name="header" delim="" ->
 struct {TYPE} {
-    // members
+  // members
 {members.header}
-    //methods
-    {methods.header}
+  //methods
+{methods.header}
 };
 
 end
