@@ -23,9 +23,8 @@ struct {TYPE} {
 
 end
 
-def function name="header" delim="" remove_last_delim="False" ->
-  TYPE {NAME}({arguments.header});
-
+def function name="header" delim=";\n" remove_last_delim="true" ->
+{TYPE} {NAME}({arguments.header})
 end
 
 
@@ -43,6 +42,5 @@ def file name="header" ext="hpp" ->
 
 //function definitions
 {functions.header}
-
 #endif {INCLUDE_GUARD_NAME}
 end

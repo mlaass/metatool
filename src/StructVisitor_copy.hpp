@@ -1,9 +1,10 @@
 #pragma once
 
-#include "types.hpp"
 #include <clang/AST/RecursiveASTVisitor.h>
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/FrontendActions.h>
+
+#include "types.hpp"
 
 using namespace metatool;
 
@@ -17,12 +18,14 @@ public:
   static std::map<std::string, MemberStructTemplate> argumentTemplates;
 
   static std::vector<Struct> structData;
-  static std::map<std::string, std::string> functionTemplatesFilled;
 
   explicit StructVisitor(clang::SourceManager &sm) : sourceManager_(sm) {}
 
   bool VisitCXXRecordDecl(clang::CXXRecordDecl *decl) {
+    std::cout << "walk..." << std::endl;
     if (sourceManager_.isWrittenInMainFile(decl->getSourceRange().getBegin())) {
+      std::cout << "step..." << std::endl;
+
       Struct s;
       s.name = decl->getQualifiedNameAsString();
       clang::ASTContext &ctx = decl->getASTContext();
@@ -36,9 +39,12 @@ public:
       if (rc) {
         // Found comment!
         std::string raw = rc->getRawText(sm).str();
+        std::cout << "comment.." << std::endl;
 
         if (raw.find("@meta-ignore-struct") != std::string::npos ||
             raw.find("@meta-ignore-class") != std::string::npos) {
+          std::cout << "ignoreStruct: " << std::endl;
+
           ignoreStruct = true;
         }
         auto ignoreMPos = raw.find("@meta-ignore-members");
@@ -62,36 +68,37 @@ public:
           s = raw.substr(start, end - start);
           s.erase(std::remove_if(s.begin(), s.end(), ::isspace), s.end());
           ignoreMembers.push_back(s);
+          std::cout << "ignore: " << s << std::endl;
         }
       }
 
       if (!ignoreStruct) {
-        for (auto &[tname, template_data] : memberTemplates) {
+        std::cout << "struct.." << std::endl;
 
+        for (auto &[tname, t] : memberTemplates) {
           std::string memberBuff;
           std::for_each(std::begin(fields), std::end(fields), [&](const auto &f) {
-            const std::string shortMemberName = f->getNameAsString();
-            const std::string memberName = f->getQualifiedNameAsString();
+            const std::string smName = f->getNameAsString();
+            const std::string mName = f->getQualifiedNameAsString();
+            std::cout << tname << smName << std::endl;
 
             const clang::QualType qt = f->getType();
-            std::string memberType = qt.getAsString();
-            // some cleanup seems to be needed here!
-            if (memberType == "_Bool")
-              memberType = "bool";
+            std::string mType = qt.getAsString();
 
-            if (std::find(ignoreMembers.begin(), ignoreMembers.end(), shortMemberName) == ignoreMembers.end()) {
+            if (mType == "_Bool")
+              mType = "bool";
 
-              memberBuff +=
-                  fill_template(template_data.template_data,
-                                {{"SHORT_NAME", shortMemberName}, {"NAME", memberName}, {"TYPE", memberType}});
-              memberBuff += template_data.delim;
+            if (std::find(ignoreMembers.begin(), ignoreMembers.end(), smName) == ignoreMembers.end()) {
+              memberBuff += fill_template(t.template_data, {{"SHORT_NAME", smName}, {"NAME", mName}, {"TYPE", mType}});
+              memberBuff += t.delim;
             }
           });
-          if (template_data.removeLast) {
-            memberBuff = memberBuff.substr(0, memberBuff.size() - template_data.delim.size());
+          if (t.removeLast) {
+            memberBuff = memberBuff.substr(0, memberBuff.size() - t.delim.size());
           }
           s.memberTemplatesFilled[tname] = memberBuff;
         }
+
         for (auto &[tname, t] : methodTemplates) {
           std::string buf;
           std::for_each(std::begin(methods), std::end(methods),
@@ -103,8 +110,8 @@ public:
         }
         structData.push_back(s);
       }
+      return true;
     }
-    return true;
   }
 
   std::string fillFunctionTemplate(const std::string &tname, const MemberStructTemplate &t, clang::FunctionDecl *f,
@@ -115,23 +122,17 @@ public:
     const std::string mName = f->getQualifiedNameAsString();
 
     const clang::QualType qt = f->getType();
-    const clang::QualType qrt = f->getReturnType();
     std::string mType = qt.getAsString();
-    std::string rType = qrt.getAsString();
 
     if (mType == "_Bool")
       mType = "bool";
-
-    if (rType == "_Bool")
-      rType = "bool";
 
     // if not in ignoreMembers
     if (ignoreMembers.end() == std::find(ignoreMembers.begin(), ignoreMembers.end(), smName)) {
       std::vector<std::pair<std::string, std::string>> args = {
           {"SHORT_NAME", smName},
           {"NAME", mName},
-          {"FUNCTION_TYPE", mType},
-          {"TYPE", rType},
+          {"TYPE", mType},
       };
 
       for (auto &[atname, at] : argumentTemplates) {
@@ -185,10 +186,20 @@ public:
   bool VisitFunctionDecl(clang::FunctionDecl *func) {
     if (func->isGlobal())
       if (sourceManager_.isWrittenInMainFile(func->getSourceRange().getBegin())) {
+        const clang::QualType rt = func->getReturnType();
+        std::string fType = rt.getAsString();
+        std::string fName = func->getNameAsString();
 
-        for (auto &[tname, t] : functionTemplates) {
-          functionTemplatesFilled[tname] += fillFunctionTemplate(tname, t, func, {});
-        }
+        std::cout << "global function " << fName << "(";
+        auto parameters = func->parameters();
+        std::for_each(std::begin(parameters), std::end(parameters), [&](const auto &p) {
+          const clang::QualType qt = p->getType();
+          std::string paramType = qt.getAsString();
+          std::string paramName = p->getNameAsString();
+
+          std::cout << paramName << " : " << paramType << ((p == *(std::end(parameters) - 1)) ? "" : ", ");
+        });
+        std::cout << ") -> " << fType << std::endl;
         return true;
       } else {
         // std::cout << "Skipping '" << func->getNameAsString()
@@ -196,27 +207,17 @@ public:
       }
     return true;
   }
-
-  void finalizeFunctions() {
-    std::cout <<"finalize functions" << std:: endl;
-    for (auto &[tname, t] : functionTemplates) {
-      if (t.removeLast) {
-        functionTemplatesFilled[tname] =
-            functionTemplatesFilled[tname].substr(0, functionTemplatesFilled[tname].size() - t.delim.size());
-      }
-    }
-  }
 };
 
 class StructASTConsumer : public clang::ASTConsumer {
+  StructVisitor visitor_; // doesn't have to be private
+
 public:
-  StructVisitor visitor;
   // override the constructor in order to pass CI
-  explicit StructASTConsumer(clang::CompilerInstance &ci) : visitor(ci.getSourceManager()) {}
+  explicit StructASTConsumer(clang::CompilerInstance &ci) : visitor_(ci.getSourceManager()) {}
 
   virtual void HandleTranslationUnit(clang::ASTContext &astContext) {
-    visitor.TraverseDecl(astContext.getTranslationUnitDecl());
-    visitor.finalizeFunctions();
+    visitor_.TraverseDecl(astContext.getTranslationUnitDecl());
   }
 };
 
@@ -232,5 +233,4 @@ std::map<std::string, metatool::MemberStructTemplate> StructVisitor::methodTempl
 std::map<std::string, metatool::MemberStructTemplate> StructVisitor::functionTemplates = {};
 std::map<std::string, metatool::MemberStructTemplate> StructVisitor::argumentTemplates = {};
 
-std::vector<metatool::Struct> StructVisitor::structData = {};
-std::map<std::string, std::string> StructVisitor::functionTemplatesFilled = {};
+std::vector<metatool::Struct> StructDeclASTVisitor::structData = {};

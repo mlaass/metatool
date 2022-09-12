@@ -53,7 +53,7 @@ antlrcpp::Any Visitor::visitAttribute(templ8Parser::AttributeContext *ctx) {
   val = std::regex_replace(val, cr, "\r");
   val = std::regex_replace(val, tb, "\t");
 
-  std::cout << "attr: " << key << " = " << prev_val << " |=> " << val << std::endl;
+  // std::cout << "attr: " << key << " = " << prev_val << " |=> " << val << std::endl;
   antlrcpp::Any result = std::pair<std::string, std::string>(key, val);
   return result;
 }

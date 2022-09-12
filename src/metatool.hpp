@@ -113,10 +113,10 @@ void parseXMLTemplates(std::istream &stream, auto &structTemplates, auto &fileTe
     }
 
     parseXMLMemberStructTemplate(root, "struct", structTemplates);
-    parseXMLMemberStructTemplate(root, "member", StructDeclASTVisitor::memberTemplates);
-    parseXMLMemberStructTemplate(root, "method", StructDeclASTVisitor::methodTemplates);
-    parseXMLMemberStructTemplate(root, "function", StructDeclASTVisitor::functionTemplates);
-    parseXMLMemberStructTemplate(root, "argument", StructDeclASTVisitor::argumentTemplates);
+    parseXMLMemberStructTemplate(root, "member", StructVisitor::memberTemplates);
+    parseXMLMemberStructTemplate(root, "method", StructVisitor::methodTemplates);
+    parseXMLMemberStructTemplate(root, "function", StructVisitor::functionTemplates);
+    parseXMLMemberStructTemplate(root, "argument", StructVisitor::argumentTemplates);
 
   } catch (const std::exception &e) {
     std::cerr << "Error parsing template" << e.what() << '\n';
@@ -168,21 +168,21 @@ void parseT8Templates(std::istream &stream, auto &structTemplates, auto &fileTem
       parseT8MemberStructTemplate(d, structTemplates);
     }
     if (d.type == "member") {
-      parseT8MemberStructTemplate(d, StructDeclASTVisitor::memberTemplates);
+      parseT8MemberStructTemplate(d, StructVisitor::memberTemplates);
     }
     if (d.type == "method") {
-      parseT8MemberStructTemplate(d, StructDeclASTVisitor::methodTemplates);
+      parseT8MemberStructTemplate(d, StructVisitor::methodTemplates);
     }
     if (d.type == "function") {
-      parseT8MemberStructTemplate(d, StructDeclASTVisitor::functionTemplates);
+      parseT8MemberStructTemplate(d, StructVisitor::functionTemplates);
     }
     if (d.type == "argument") {
-      parseT8MemberStructTemplate(d, StructDeclASTVisitor::argumentTemplates);
+      parseT8MemberStructTemplate(d, StructVisitor::argumentTemplates);
     }
   }
 }
-
-int generate(const clang::tooling::CompilationDatabase &compilations, const llvm::ArrayRef<std::__cxx11::string> &files,
+namespace ct = clang::tooling;
+int generate(const ct::CompilationDatabase &compilations, const llvm::ArrayRef<std::string> &files,
              std::istream &stream, bool t8 = true, const std::string &outputFilename = "") {
   std::map<std::string, MemberStructTemplate> structTemplates;
   std::map<std::string, FileTemplate> fileTemplates;
@@ -193,24 +193,25 @@ int generate(const clang::tooling::CompilationDatabase &compilations, const llvm
     parseXMLTemplates(stream, structTemplates, fileTemplates, outputFilename);
   }
 
-  clang::tooling::ClangTool tool{compilations, files};
+  ct::ClangTool tool{compilations, files};
 
-  auto ec = tool.run(clang::tooling::newFrontendActionFactory<StructDeclFrontendAction>().get());
+  auto ec = tool.run(ct::newFrontendActionFactory<StructFrontendAction>().get());
+
 
   // struct templates buffer
   std::map<std::string, std::string> structBuf;
 
   for (const auto &[struct_templ_name, struct_templ] : structTemplates) {
     structBuf[struct_templ_name] = "";
-    for (auto &structEntry : StructDeclASTVisitor::structData) {
+    for (auto &structEntry : StructVisitor::structData) {
       // collect member + method args
       std::vector<std::pair<std::string, std::string>> args;
-      for (auto &[mem_templ_name, mem_templ] : StructDeclASTVisitor::memberTemplates) {
+      for (auto &[mem_templ_name, mem_templ] : StructVisitor::memberTemplates) {
         auto members = structEntry.memberTemplatesFilled[mem_templ_name];
         args.push_back({(std::string("members.") + mem_templ_name), members});
       }
 
-      for (auto &[mem_templ_name, mem_templ] : StructDeclASTVisitor::methodTemplates) {
+      for (auto &[mem_templ_name, mem_templ] : StructVisitor::methodTemplates) {
         auto members = structEntry.methodTemplatesFilled[mem_templ_name];
         args.push_back({(std::string("methods.") + mem_templ_name), members});
       }
@@ -244,6 +245,11 @@ int generate(const clang::tooling::CompilationDatabase &compilations, const llvm
   // collect args for file templates
   for (const auto &[file_templ_name, file_templ] : fileTemplates) {
     args.push_back({(std::string("filename.") + file_templ_name), file_templ.filename});
+  }
+
+  // collect args for function templates
+  for (const auto &[tname, t] : StructVisitor::functionTemplates) {
+    args.push_back({(std::string("functions.") + tname), StructVisitor::functionTemplatesFilled[tname]});
   }
 
   args.push_back({"INCLUDE_GUARD_NAME", randomHeaderName()});
