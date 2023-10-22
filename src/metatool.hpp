@@ -184,6 +184,7 @@ void parseT8Templates(std::istream &stream, auto &structTemplates, auto &fileTem
 namespace ct = clang::tooling;
 int generate(const ct::CompilationDatabase &compilations, const llvm::ArrayRef<std::string> &files,
              std::istream &stream, bool t8 = true, const std::string &outputFilename = "") {
+
   std::map<std::string, MemberStructTemplate> structTemplates;
   std::map<std::string, FileTemplate> fileTemplates;
 
@@ -196,7 +197,6 @@ int generate(const ct::CompilationDatabase &compilations, const llvm::ArrayRef<s
   ct::ClangTool tool{compilations, files};
 
   auto ec = tool.run(ct::newFrontendActionFactory<StructFrontendAction>().get());
-
 
   // struct templates buffer
   std::map<std::string, std::string> structBuf;
@@ -230,9 +230,11 @@ int generate(const ct::CompilationDatabase &compilations, const llvm::ArrayRef<s
 
   // add files include buffer
   std::string includeBuff;
+  std::string fileBuff;
   {
     for (const auto &f : files) {
       includeBuff += fill_template("#include <{FILE}>\n", {{"FILE", f}});
+      fileBuff += fill_template("{FILE}\n", {{"FILE", f}});
     }
   }
 
@@ -254,6 +256,7 @@ int generate(const ct::CompilationDatabase &compilations, const llvm::ArrayRef<s
 
   args.push_back({"INCLUDE_GUARD_NAME", randomHeaderName()});
   args.push_back({"INCLUDES", includeBuff});
+  args.push_back({"FILES", fileBuff});
 
   // generate and fill files
   for (const auto &[file_templ_name, file_templ] : fileTemplates) {

@@ -1,11 +1,11 @@
 name: nlohmann-json
 
 def member name="serialize" delim="" remove_last_delim="True" ->
-j["{SHORT_MEMBER_NAME}"] = input.{SHORT_MEMBER_NAME};
+j["{SHORT_NAME}"] = input.{SHORT_NAME};
 end
 
 def member name="deserialize" delim="" ->
-	output.{SHORT_MEMBER_NAME} = j["{SHORT_MEMBER_NAME}"].get<{MEMBER_TYPE}>();
+	output.{SHORT_NAME} = j["{SHORT_NAME}"].get<{TYPE}>();
 end
 
 def struct name="header" delim="" ->

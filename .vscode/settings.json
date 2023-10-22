@@ -3,6 +3,9 @@
     "*.cl": "opencl",
     "*.j2": "jinja-html",
     "*.xml": "xml",
+    "*.py": "python",
+    "*.html": "html",
+    "*.el": "plaintext",
     "cctype": "cpp",
     "clocale": "cpp",
     "cmath": "cpp",
@@ -86,7 +89,12 @@
     "ios": "cpp",
     "locale": "cpp",
     "filesystem": "cpp",
-    "stack": "cpp"
+    "stack": "cpp",
+    "forward_list": "cpp",
+    "unordered_set": "cpp",
+    "numbers": "cpp",
+    "shared_mutex": "cpp",
+    "semaphore": "cpp"
   },
   "cmake.configureOnOpen": true
 }
