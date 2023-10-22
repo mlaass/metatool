@@ -1,4 +1,4 @@
-# metatool
+# Metatool
 
 Clang based templated code generator from C/C++ sources. Useful for serialization/deserialization, introspection and interfacing with embedded languages etc.
 
@@ -10,8 +10,9 @@ the templates subdirectory contains a selection of templates ready to use. curre
 * [nlohmann::json](https://github.com/nlohmann/json) JSON for Modern C++
 * [sol2](https://github.com/ThePhD/sol2) Lua API wrapper for C++
 * [metastuff](https://github.com/eliasdaler/MetaStuff)
-*
+
 ## Prerequisites for building
+
 Cmake and [clang](https://clang.llvm.org/) & [llvm](https://llvm.org/) version 17 is required to be installed as generating is based on [libTooling](https://clang.llvm.org/docs/LibTooling.html) from LLVM/Clang.
 Also gcc version 12 is expected (at least on my current system)
 e.g. on linux
@@ -37,20 +38,20 @@ cmake --build . --config Release
 ## Usage
  ```sh
  cd build/
- ./metatool-gen -t ../templates/nlohmann-json.t8 -o test-json ../test/test.cpp -- -std=c++20
+ ./metatool -t ../templates/nlohmann-json.t8 -o test-json ../test/test.cpp -- -std=c++20
  ```
 If you run intro trouble with includes, you might need to a create a compilation database, which is a json file called `compile_commands.json`.
 
 You can do that with with cmake like this: `cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON` you can pass the file into clang using `-p`
 
  ```sh
- ./metatool-gen -t ../templates/nlohmann-json.xml -o test-json ../test/test.cpp -- -p /path/to/compile_commands.json
+ ./metatool -t ../templates/nlohmann-json.xml -o test-json ../test/test.cpp -- -p /path/to/compile_commands.json
  ```
 
-Or you need to figure out your includes are for clang and pass them to metatool-gen command line. See example:
+Or you need to figure out your includes are for clang and pass them to metatool command line. See example:
 
  ```sh
- ./metatool-gen -p ../test -t ../templates/sol2-lua.xml -o test-lua  ../test/test.cpp -- -I/include/path/here -std=c++17
+ ./metatool -p ../test -t ../templates/sol2-lua.xml -o test-lua  ../test/test.cpp -- -I/include/path/here -std=c++17
  ```
 
  where test.cpp:
@@ -170,9 +171,9 @@ template <> struct adl_serializer<C> {
 ## Detailed usage
 
 ```sh
-$ metatool-gen --help
+$ metatool --help
 
-USAGE: metatool-gen [options] <source0> [... <sourceN>]
+USAGE: metatool [options] <source0> [... <sourceN>]
 
 OPTIONS:
 
@@ -182,7 +183,7 @@ Generic Options:
   -help-list                 - Display list of available options (-help-list-hidden for more)
   -version                   - Display the version of this program
 
-metatool-generator options:
+metatoolerator options:
 
   -extra-arg=<string>        - Additional argument to append to the compiler command line
   -extra-arg-before=<string> - Additional argument to prepend to the compiler command line

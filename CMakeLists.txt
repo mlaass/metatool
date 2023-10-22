@@ -26,12 +26,12 @@ add_definitions(${CLANG_DEFINITIONS})
 
 set(LLVM_LINK_COMPONENTS support)
 
-add_llvm_executable(metatool-gen src/main.cpp)
+add_llvm_executable(metatool src/main.cpp)
 
 add_subdirectory(templ8-parser)
 message(STATUS "templ8 include dirs: ${TEMPL8_INCLUDE_DIRS}")
 
-target_include_directories(metatool-gen
+target_include_directories(metatool
   PUBLIC 3rdParty/argparse/include
   PUBLIC 3rdParty/tinyxml2
   PUBLIC templ8-parser
@@ -40,9 +40,9 @@ target_include_directories(metatool-gen
   ${TEMPL8_INCLUDE_DIRS}
 )
 
-target_compile_options(metatool-gen PRIVATE -fexceptions)
+target_compile_options(metatool PRIVATE -fexceptions)
 
-target_link_libraries(metatool-gen
+target_link_libraries(metatool
   PRIVATE clangTooling
   PUBLIC templ8
   PUBLIC tinyxml2)
