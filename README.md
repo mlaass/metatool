@@ -13,13 +13,12 @@ the templates subdirectory contains a selection of templates ready to use. curre
 
 ## Prerequisites for building
 
-Cmake and [clang](https://clang.llvm.org/) & [llvm](https://llvm.org/) version 17 is required to be installed as generating is based on [libTooling](https://clang.llvm.org/docs/LibTooling.html) from LLVM/Clang.
-Also gcc version 12 is expected (at least on my current system)
-e.g. on linux
+Cmake and [clang](https://clang.llvm.org/) & [llvm](https://llvm.org/) dev version is required to be installed as generating is based on [libTooling](https://clang.llvm.org/docs/LibTooling.html) from LLVM/Clang.
+Also at least gcc version 12 is expected
 
 ```sh
 sudo apt update
-sudo apt install llvm-17-dev libclang-17-dev gcc-12 g++-12
+sudo apt install llvm-dev libclang-dev gcc-12 g++-12
 ```
 
 ## Building

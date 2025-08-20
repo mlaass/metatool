@@ -6,11 +6,11 @@ add_compile_options(-fconcepts)
 
 # set(CMAKE_FIND_PACKAGE_SORT_ORDER NATURAL)
 # set(CMAKE_FIND_PACKAGE_SORT_DIRECTION DEC)
-set(USE_LLVM_VERSION 17)
+#set(USE_LLVM_VERSION 18)
 
 # Find CMake file for Clang
-find_package(LLVM ${USE_LLVM_VERSION} REQUIRED)
-find_package(Clang ${USE_LLVM_VERSION} REQUIRED)
+find_package(LLVM REQUIRED)
+find_package(Clang REQUIRED)
 
 # Add path to LLVM modules
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${LLVM_CMAKE_DIR}")
