@@ -6,7 +6,7 @@ This is a fork of [metastuff-clang-generator](https://github.com/btaczala/metast
 
 Extensible using templates written in either xml or my own template format t8.
 
-the templates subdirectory contains a selection of templates ready to use. currenlt supporting the following targets:
+the templates subdirectory contains a selection of templates ready to use. currently supporting the following targets:
 * [nlohmann::json](https://github.com/nlohmann/json) JSON for Modern C++
 * [sol2](https://github.com/ThePhD/sol2) Lua API wrapper for C++
 * [metastuff](https://github.com/eliasdaler/MetaStuff)
